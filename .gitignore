@@ -1,0 +1,23 @@
+# Secrets et configuration locale
+.env
+*.env
+config/database.local.*
+
+# Dépendances
+node_modules/
+venv/
+__pycache__/
+
+# Fichiers générés
+dist/
+build/
+*.log
+
+# Fichiers spécifiques à l'éditeur / l'OS
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Dumps et sauvegardes PostgreSQL éventuels
+*.sql.backup
+*.dump
