@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Projet BDE — Gestion des événements
 
 ## Présentation du projet
