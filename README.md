@@ -22,8 +22,7 @@
                 border-radius: 10px;
                 height: 35px;
                 align-items: center;
-                margin: 0 auto;
-                
+                margin: 0 auto;  
             }
             .button {
                 border: none;
