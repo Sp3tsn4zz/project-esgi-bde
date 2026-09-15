@@ -1,18 +1,14 @@
+<!DOCTYPE html>
 <html>
-  <h1>
-    
-  </h1>
-  <button>Bouton
-  
-  </button>
+    <head>
+        <titre>BDE Gestion</titre>
+        <style>
+
+        </style>
+    </head>
+    <body>
+        <div>
+            
+        </div>
+    </body>
 </html>
-
-
-
-
-
-
-
-
-
-
