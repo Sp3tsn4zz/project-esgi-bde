@@ -18,13 +18,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/planning/events.json', [PlanningController::class, 'eventsJson'])->name('planning.events.json');
 
     // Événements
-    Route::get('/events', [EventController::class, 'index'])->name('events.index');
+    Route::get('/events', [EventController::class, 'index'])->name('events.index'); 
     Route::get('/events.json', [EventController::class, 'json'])->name('events.json.list');
     Route::post('/events', [EventController::class, 'store'])->name('events.store');
     Route::put('/events/{event}', [EventController::class, 'update'])->name('events.update');
     Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.destroy');
     Route::patch('/events/{event}/archive', [EventController::class, 'archive'])->name('events.archive');
     Route::get('/events/{event}/json', [EventController::class, 'showJson'])->name('events.json');
+    Route::post('/events/{event}/image', [EventController::class, 'uploadImage'])->name('events.image.upload');
+    Route::delete('/events/{event}/image', [EventController::class, 'deleteImage'])->name('events.image.delete');
     Route::get('/events/{event}/export', [EventController::class, 'export'])->name('events.export');
     Route::post('/events/{event}/participants', [EventController::class, 'addParticipant'])->name('events.participants.add');
     Route::delete('/events/{event}/participants/{student}', [EventController::class, 'removeParticipant'])->name('events.participants.remove');
@@ -32,6 +34,9 @@ Route::middleware('auth')->group(function () {
     // Étudiants
     Route::get('/students', [StudentController::class, 'index'])->name('students.index');
     Route::get('/students.json', [StudentController::class, 'json'])->name('students.json');
+    Route::get('/students/import-template', [StudentController::class, 'importTemplate'])->name('students.import.template');
+    Route::get('/students/export', [StudentController::class, 'export'])->name('students.export');
+    Route::post('/students/import', [StudentController::class, 'import'])->name('students.import');
     Route::post('/students', [StudentController::class, 'store'])->name('students.store');
     Route::put('/students/{student}', [StudentController::class, 'update'])->name('students.update');
     Route::delete('/students/{student}', [StudentController::class, 'destroy'])->name('students.destroy');

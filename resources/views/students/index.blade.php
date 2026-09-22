@@ -8,7 +8,11 @@
       <h1>Étudiants</h1>
       <p class="subtitle">Liste des étudiants de l'école et statut de leurs cotisations.</p>
     </div>
-    <button class="btn btn-primary" id="new-student-btn">+ Nouvel étudiant</button>
+    <div style="display:flex; gap:10px;">
+      <a href="{{ route('students.export') }}" id="export-students-link" class="btn btn-outline">Exporter (CSV)</a>
+      <button class="btn btn-outline" id="import-student-btn">Importer (Excel/CSV)</button>
+      <button class="btn btn-primary" id="new-student-btn">+ Nouvel étudiant</button>
+    </div>
   </div>
 
   <div class="toolbar">
@@ -61,7 +65,7 @@
           </div>
           <div class="field checkbox-field">
             <input type="checkbox" id="bde_fee_paid" style="width:auto;" />
-            <label for="bde_fee_paid" style="font-weight:500;">Cotisation BDE payée</label>
+            <label for="bde_fee_paid" style="font-weight:500;">Membre BDE</label>
           </div>
         </div>
         <div class="field">
@@ -75,6 +79,34 @@
       </form>
     </div>
   </div>
+  <!-- Modal import Excel/CSV -->
+  <div class="modal-backdrop" id="import-modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Importer des étudiants</h3>
+        <button class="modal-close" id="import-modal-close">&times;</button>
+      </div>
+      <div id="import-error" class="error-msg"></div>
+      <p class="muted">
+        Fichier <strong>.csv</strong> ou <strong>.xlsx</strong> (Excel), avec en première ligne les colonnes :
+        <br><code>Prénom, Nom, Email, Promo, École payée, Membre BDE</code>
+        <br>Pour "École payée" et "Membre BDE" : Oui / Non.
+      </p>
+      <a href="{{ route('students.import.template') }}" class="muted" style="display:inline-block; margin-bottom:14px;">Télécharger un modèle CSV vierge →</a>
+
+      <form id="import-form">
+        <div class="field">
+          <label for="import-file">Fichier</label>
+          <input type="file" id="import-file" accept=".csv,.xlsx,.xls" required />
+        </div>
+        <div id="import-result" class="muted" style="display:none; margin-bottom:10px;"></div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" id="cancel-import">Annuler</button>
+          <button type="submit" class="btn btn-primary" id="import-submit-btn">Importer</button>
+        </div>
+      </form>
+    </div>
+  </div>
 @endsection
 
 @section('scripts')
@@ -84,6 +116,8 @@ const ROUTES = {
   studentStore: "{{ route('students.store') }}",
   studentUpdate: (id) => `/students/${id}`,
   studentDelete: (id) => `/students/${id}`,
+  studentImport: "{{ route('students.import') }}",
+  studentExport: "{{ route('students.export') }}",
 };
 </script>
 <script src="{{ asset('js/students.js') }}"></script>

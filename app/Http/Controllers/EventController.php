@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Event;
 use App\Models\Student;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class EventController extends Controller
@@ -31,6 +32,8 @@ class EventController extends Controller
                 'event_date' => $e->event_date->format('Y-m-d'),
                 'event_time' => $e->event_time,
                 'location' => $e->location,
+                'capacity' => $e->capacity,
+                'image_url' => $e->image_url,
                 'participant_count' => $e->participants_count,
             ]);
 
@@ -57,6 +60,9 @@ class EventController extends Controller
 
     public function destroy(Event $event)
     {
+        if ($event->image_path) {
+            Storage::disk('public')->delete($event->image_path);
+        }
         $event->delete();
 
         return response()->json(['success' => true]);
@@ -85,6 +91,8 @@ class EventController extends Controller
             'event_date' => $event->event_date->format('Y-m-d'),
             'event_time' => $event->event_time,
             'location' => $event->location,
+            'capacity' => $event->capacity,
+            'image_url' => $event->image_url,
             'participants' => $event->participants->map(fn ($s) => [
                 'id' => $s->id,
                 'first_name' => $s->first_name,
@@ -102,6 +110,12 @@ class EventController extends Controller
 
         if ($event->participants()->where('student_id', $request->student_id)->exists()) {
             return response()->json(['error' => 'Cet étudiant est déjà inscrit.'], 409);
+        }
+
+        if ($event->capacity && $event->participants()->count() >= $event->capacity) {
+            return response()->json([
+                'error' => "Capacité maximale atteinte ({$event->participants()->count()}/{$event->capacity}). Impossible d'inscrire un participant de plus.",
+            ], 409);
         }
 
         $event->participants()->attach($request->student_id);
@@ -124,7 +138,7 @@ class EventController extends Controller
         return response()->streamDownload(function () use ($participants) {
             echo "\xEF\xBB\xBF"; // BOM pour Excel
             $out = fopen('php://output', 'w');
-            fputcsv($out, ['Prénom', 'Nom', 'Email', 'Promo', 'Cotisation école payée', 'Cotisation BDE payée']);
+            fputcsv($out, ['Prénom', 'Nom', 'Email', 'Promo', 'École payée', 'Membre BDE'], ';');
             foreach ($participants as $p) {
                 fputcsv($out, [
                     $p->first_name,
@@ -133,10 +147,43 @@ class EventController extends Controller
                     $p->promo,
                     $p->school_fee_paid ? 'Oui' : 'Non',
                     $p->bde_fee_paid ? 'Oui' : 'Non',
-                ]);
+                ], ';');
             }
             fclose($out);
         }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    /**
+     * Ajoute ou remplace l'image d'un événement.
+     */
+    public function uploadImage(Request $request, Event $event)
+    {
+        $request->validate([
+            'image' => 'required|image|mimes:jpg,jpeg,png,webp|max:5120', // 5 Mo max
+        ]);
+
+        // Supprime l'ancienne image si elle existe
+        if ($event->image_path) {
+            Storage::disk('public')->delete($event->image_path);
+        }
+
+        $path = $request->file('image')->store('events', 'public');
+        $event->update(['image_path' => $path]);
+
+        return response()->json(['success' => true, 'image_url' => $event->fresh()->image_url]);
+    }
+
+    /**
+     * Supprime l'image d'un événement.
+     */
+    public function deleteImage(Event $event)
+    {
+        if ($event->image_path) {
+            Storage::disk('public')->delete($event->image_path);
+            $event->update(['image_path' => null]);
+        }
+
+        return response()->json(['success' => true]);
     }
 
     private function validateData(Request $request): array

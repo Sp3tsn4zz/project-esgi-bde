@@ -10,6 +10,11 @@
 </head>
 <body>
   <div class="login-wrap">
+    <img
+        src="{{ asset('Serpent.png') }}"
+        alt="Serpent"
+        class="Serpent"
+    >
     <div class="login-card">
       <div class="brand">BDE<span>Events</span></div>
       <p class="tagline">Espace réservé aux membres du BDE</p>
@@ -24,13 +29,31 @@
           <label for="email">Email</label>
           <input type="email" id="email" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus />
         </div>
-        <div class="field">
-          <label for="password">Mot de passe</label>
-          <input type="password" id="password" name="password" required autocomplete="current-password" />
-        </div>
+<div class="field">
+  <label for="password">Mot de passe</label>
+  <div class="password-wrap">
+    <input type="password" id="password" name="password" required autocomplete="current-password" />
+    <button type="button" id="toggle-password" class="toggle-password-btn">Afficher</button>
+  </div>
+</div>
         <button type="submit" class="btn btn-primary">Se connecter</button>
       </form>
     </div>
   </div>
+  <script>
+  const toggleBtn = document.getElementById('toggle-password');
+  const passwordField = document.getElementById('password');
+
+  toggleBtn.addEventListener('mousedown', function (e) {
+    e.preventDefault();
+  });
+
+  toggleBtn.addEventListener('click', function () {
+    const isPassword = passwordField.type === 'password';
+    passwordField.type = isPassword ? 'text' : 'password';
+    toggleBtn.textContent = isPassword ? 'Masquer' : 'Afficher';
+  });
+</script>
+<footer class="site-credit">made by BDEvelopper</footer>
 </body>
 </html>

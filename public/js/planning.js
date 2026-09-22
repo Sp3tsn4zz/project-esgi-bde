@@ -18,6 +18,44 @@ async function init() {
 
   await loadEvents();
   renderCalendar();
+  renderUpcomingEvents();
+}
+
+function renderUpcomingEvents() {
+  const container = document.getElementById('upcoming-events-list');
+  if (!container) return;
+
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const upcoming = Object.entries(eventsByDate)
+    .filter(([date]) => date >= todayStr)
+    .flatMap(([date, evs]) => evs.map((ev) => ({ ...ev, date })))
+    .sort((a, b) => (a.date + (a.event_time || '')).localeCompare(b.date + (b.event_time || '')))
+    .slice(0, 6);
+
+  if (!upcoming.length) {
+    container.innerHTML = `<p class="empty-state" style="padding:20px 0;">Aucun événement à venir.</p>`;
+    return;
+  }
+
+  container.innerHTML = upcoming
+    .map((ev) => {
+      const dateFmt = new Date(ev.date + 'T00:00:00').toLocaleDateString('fr-FR', {
+        day: 'numeric', month: 'short',
+      });
+      return `
+      <div class="upcoming-item" data-id="${ev.id}">
+        <div class="upcoming-date">${dateFmt}</div>
+        <div class="upcoming-info">
+          <div class="upcoming-title">${escapeHtml(ev.title)}</div>
+          <div class="upcoming-meta">${ev.event_time ? ev.event_time + ' · ' : ''}${escapeHtml(ev.location || '')}</div>
+        </div>
+      </div>`;
+    })
+    .join('');
+
+  container.querySelectorAll('.upcoming-item').forEach((el) => {
+    el.addEventListener('click', () => openEventModal(el.dataset.id));
+  });
 }
 
 async function loadEvents() {
@@ -92,17 +130,20 @@ async function openEventModal(id) {
   });
 
   const body = document.getElementById('event-modal-body');
+  const isFull = ev.capacity && ev.participants.length >= ev.capacity;
   body.innerHTML = `
+    ${ev.image_url ? `<img src="${ev.image_url}" alt="${escapeHtml(ev.title)}" style="width:100%; max-height:260px; object-fit:cover; border-radius:10px; margin-bottom:14px;" />` : ''}
     <p class="muted">${dateFmt}${ev.event_time ? ' · ' + ev.event_time : ''}${ev.location ? ' · ' + escapeHtml(ev.location) : ''}</p>
     ${ev.description ? `<p>${escapeHtml(ev.description)}</p>` : ''}
 
     <div style="display:flex; justify-content:space-between; align-items:center; margin:18px 0 10px;">
-      <h4 style="margin:0;">Participants (${ev.participants.length})</h4>
+      <h4 style="margin:0;">Participants (${ev.participants.length}${ev.capacity ? ' / ' + ev.capacity : ''})</h4>
       <div style="display:flex; gap:8px;">
-        <button class="btn btn-outline btn-sm" id="add-participant-btn">+ Ajouter</button>
+        <button class="btn btn-outline btn-sm" id="add-participant-btn" ${isFull ? 'disabled title="Capacité maximale atteinte"' : ''}>+ Ajouter</button>
         <a class="btn btn-accent btn-sm" href="${ROUTES.eventExport(ev.id)}">Exporter CSV</a>
       </div>
     </div>
+    ${isFull ? `<p class="muted" style="color: var(--amber);">Capacité maximale atteinte (${ev.participants.length}/${ev.capacity}).</p>` : ''}
 
     <div id="add-participant-box" style="display:none; margin-bottom:12px;">
       <select id="student-select" style="width:100%; padding:8px; border-radius:7px; border:1px solid var(--line);"></select>

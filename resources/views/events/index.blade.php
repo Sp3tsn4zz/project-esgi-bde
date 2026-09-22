@@ -61,6 +61,14 @@
           <label for="description">Description</label>
           <textarea id="description" rows="3"></textarea>
         </div>
+        <div class="field">
+          <label for="image">Image de l'événement (optionnel)</label>
+          <div id="image-preview-box" style="display:none; margin-bottom:8px;">
+            <img id="image-preview" src="" alt="Aperçu" style="max-width:100%; max-height:140px; border-radius:8px; display:block; margin-bottom:6px;" />
+            <button type="button" class="btn btn-danger btn-sm" id="remove-image-btn">Supprimer l'image</button>
+          </div>
+          <input type="file" id="image" accept="image/png,image/jpeg,image/webp" />
+        </div>
         <div class="modal-actions">
           <button type="button" class="btn btn-outline" id="cancel-form">Annuler</button>
           <button type="submit" class="btn btn-primary">Enregistrer</button>
@@ -79,6 +87,8 @@ const ROUTES = {
   eventUpdate: (id) => `/events/${id}`,
   eventDelete: (id) => `/events/${id}`,
   eventArchive: (id) => `/events/${id}/archive`,
+  eventImageUpload: (id) => `/events/${id}/image`,
+  eventImageDelete: (id) => `/events/${id}/image`,
 };
 </script>
 <script src="{{ asset('js/events.js') }}"></script>

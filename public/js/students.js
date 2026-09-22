@@ -10,12 +10,70 @@ async function init() {
     searchTimeout = setTimeout(() => loadStudents(e.target.value), 250);
   });
 
+  document.getElementById('import-student-btn').addEventListener('click', openImportModal);
+  document.getElementById('import-modal-close').addEventListener('click', closeImportModal);
+  document.getElementById('cancel-import').addEventListener('click', closeImportModal);
+  document.getElementById('import-form').addEventListener('submit', submitImport);
+
   await loadStudents();
+}
+
+function openImportModal() {
+  document.getElementById('import-error').classList.remove('show');
+  document.getElementById('import-result').style.display = 'none';
+  document.getElementById('import-form').reset();
+  document.getElementById('import-modal-backdrop').classList.add('show');
+}
+
+function closeImportModal() {
+  document.getElementById('import-modal-backdrop').classList.remove('show');
+}
+
+async function submitImport(e) {
+  e.preventDefault();
+  const fileInput = document.getElementById('import-file');
+  const errBox = document.getElementById('import-error');
+  const resultBox = document.getElementById('import-result');
+  errBox.classList.remove('show');
+  resultBox.style.display = 'none';
+
+  if (!fileInput.files.length) return;
+
+  const submitBtn = document.getElementById('import-submit-btn');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Import en cours...';
+
+  const formData = new FormData();
+  formData.append('file', fileInput.files[0]);
+
+  try {
+    const res = await fetch(ROUTES.studentImport, { method: 'POST', body: formData });
+    const data = await res.json();
+
+    if (!res.ok) {
+      errBox.textContent = data.message || data.error || "Erreur lors de l'import.";
+      errBox.classList.add('show');
+      return;
+    }
+
+    resultBox.style.display = 'block';
+    resultBox.textContent = `${data.imported} étudiant(s) importé(s)${data.skipped ? `, ${data.skipped} ligne(s) ignorée(s)` : ''}.`;
+    loadStudents(document.getElementById('search-input').value);
+  } catch (err) {
+    errBox.textContent = "Impossible de contacter le serveur.";
+    errBox.classList.add('show');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Importer';
+  }
 }
 
 async function loadStudents(search = '') {
   const students = await fetch(ROUTES.studentsList(search)).then((r) => r.json());
   const tbody = document.getElementById('students-tbody');
+
+  const exportLink = document.getElementById('export-students-link');
+  exportLink.href = ROUTES.studentExport + (search ? '?search=' + encodeURIComponent(search) : '');
 
   if (!students.length) {
     tbody.innerHTML = `<tr><td colspan="6" class="empty-state">Aucun étudiant trouvé.</td></tr>`;
@@ -30,7 +88,7 @@ async function loadStudents(search = '') {
       <td>${escapeHtml(s.email || '—')}</td>
       <td>${escapeHtml(s.promo || '—')}</td>
       <td><button class="badge ${s.school_fee_paid ? 'paid' : 'unpaid'} toggle-school" style="border:none; cursor:pointer;">${s.school_fee_paid ? 'Payé' : 'Non payé'}</button></td>
-      <td><button class="badge ${s.bde_fee_paid ? 'paid' : 'unpaid'} toggle-bde" style="border:none; cursor:pointer;">${s.bde_fee_paid ? 'Payé' : 'Non payé'}</button></td>
+      <td><button class="badge ${s.bde_fee_paid ? 'paid' : 'unpaid'} toggle-bde" style="border:none; cursor:pointer;">${s.bde_fee_paid ? 'Oui' : 'Non'}</button></td>
       <td class="row-actions">
         <button class="btn btn-outline btn-sm edit-btn">Modifier</button>
         <button class="btn btn-danger btn-sm delete-btn">Supprimer</button>

@@ -18,6 +18,7 @@
       <a href="{{ route('events.index') }}" class="nav-link {{ request()->routeIs('events.*') ? 'active' : '' }}">Événements</a>
       <a href="{{ route('students.index') }}" class="nav-link {{ request()->routeIs('students.*') ? 'active' : '' }}">Étudiants</a>
     </nav>
+    <img src="{{ asset('Serpent.png') }}" alt="Serpent" class="serpent">
     <div class="user-box">
       Connecté en tant que<br/><strong>{{ auth()->user()->name }}</strong>
       <form action="{{ route('logout') }}" method="POST">

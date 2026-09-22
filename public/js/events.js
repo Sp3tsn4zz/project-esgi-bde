@@ -5,6 +5,7 @@ async function init() {
   document.getElementById('form-modal-close').addEventListener('click', closeForm);
   document.getElementById('cancel-form').addEventListener('click', closeForm);
   document.getElementById('event-form').addEventListener('submit', submitForm);
+  document.getElementById('remove-image-btn').addEventListener('click', removeCurrentImage);
   document.getElementById('tab-active').addEventListener('click', () => switchTab('active'));
   document.getElementById('tab-archived').addEventListener('click', () => switchTab('archived'));
 
@@ -39,7 +40,7 @@ async function loadEvents() {
         <td><strong>${escapeHtml(ev.title)}</strong></td>
         <td>${dateFmt}${ev.event_time ? ' · ' + ev.event_time : ''}</td>
         <td>${escapeHtml(ev.location || '—')}</td>
-        <td>${ev.participant_count}</td>
+        <td>${ev.participant_count}${ev.capacity ? ' / ' + ev.capacity : ''}</td>
         <td class="row-actions">
           <button class="btn btn-outline btn-sm edit-btn">Modifier</button>
           <button class="btn btn-outline btn-sm archive-btn">${currentTab === 'archived' ? 'Désarchiver' : 'Archiver'}</button>
@@ -68,6 +69,8 @@ async function openForm(id) {
   document.getElementById('form-error').classList.remove('show');
   document.getElementById('event-form').reset();
   document.getElementById('event-id').value = '';
+  document.getElementById('image-preview-box').style.display = 'none';
+  document.getElementById('image-preview').src = '';
 
   if (id) {
     document.getElementById('form-modal-title').textContent = "Modifier l'événement";
@@ -79,11 +82,30 @@ async function openForm(id) {
     document.getElementById('location').value = ev.location || '';
     document.getElementById('capacity').value = ev.capacity || '';
     document.getElementById('description').value = ev.description || '';
+
+    if (ev.image_url) {
+      document.getElementById('image-preview').src = ev.image_url;
+      document.getElementById('image-preview-box').style.display = 'block';
+    }
   } else {
     document.getElementById('form-modal-title').textContent = 'Nouvel événement';
   }
 
   document.getElementById('form-modal-backdrop').classList.add('show');
+}
+
+async function removeCurrentImage() {
+  const id = document.getElementById('event-id').value;
+  if (!id) {
+    // Événement pas encore créé : on efface juste le champ fichier local
+    document.getElementById('image').value = '';
+    document.getElementById('image-preview-box').style.display = 'none';
+    return;
+  }
+  if (!confirm("Supprimer l'image de cet événement ?")) return;
+  await fetch(ROUTES.eventImageDelete(id), { method: 'DELETE' });
+  document.getElementById('image-preview-box').style.display = 'none';
+  document.getElementById('image-preview').src = '';
 }
 
 function closeForm() {
@@ -114,6 +136,23 @@ async function submitForm(e) {
     errBox.textContent = data.message || (data.errors ? Object.values(data.errors)[0][0] : 'Erreur lors de l’enregistrement.');
     errBox.classList.add('show');
     return;
+  }
+
+  const savedEvent = await res.json();
+  const imageFile = document.getElementById('image').files[0];
+
+  if (imageFile) {
+    const formData = new FormData();
+    formData.append('image', imageFile);
+    const imgRes = await fetch(ROUTES.eventImageUpload(savedEvent.id), { method: 'POST', body: formData });
+    if (!imgRes.ok) {
+      const data = await imgRes.json();
+      const errBox = document.getElementById('form-error');
+      errBox.textContent = "Événement enregistré, mais l'image n'a pas pu être envoyée : " + (data.message || "erreur inconnue.");
+      errBox.classList.add('show');
+      loadEvents();
+      return;
+    }
   }
 
   closeForm();

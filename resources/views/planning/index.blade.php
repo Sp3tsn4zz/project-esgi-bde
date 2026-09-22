@@ -10,13 +10,20 @@
     </div>
   </div>
 
-  <div class="card">
-    <div class="calendar-nav">
-      <button class="btn btn-outline btn-sm" id="prev-month">&larr;</button>
-      <div class="month-label" id="month-label"></div>
-      <button class="btn btn-outline btn-sm" id="next-month">&rarr;</button>
+  <div class="planning-layout">
+    <div class="card">
+      <div class="calendar-nav">
+        <button class="btn btn-outline btn-sm" id="prev-month">&larr;</button>
+        <div class="month-label" id="month-label"></div>
+        <button class="btn btn-outline btn-sm" id="next-month">&rarr;</button>
+      </div>
+      <div class="calendar-grid" id="calendar-grid"></div>
     </div>
-    <div class="calendar-grid" id="calendar-grid"></div>
+
+    <div class="card">
+      <h3 style="margin-bottom:14px;">Événements à venir</h3>
+      <div id="upcoming-events-list"></div>
+    </div>
   </div>
 
   <!-- Modal détail événement -->
